@@ -17,6 +17,7 @@ router.patch("/",updateUsers);
 router.delete("/:id",deleteUser);
 router.post("/login2", login2);
 router.post("/refresh_token", refresh_token);
+//
 //router.post("/", TokenCheckMiddleware, createUser);
 //router.get("/:id",TokenCheckMiddleware,getUserByUserId);
 //router.patch("/",TokenCheckMiddleware,updateUsers);
