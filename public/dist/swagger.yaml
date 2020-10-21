@@ -2,7 +2,7 @@ openapi: 3.0.0
 # Added by API Auto Mocking Plugin
 servers:
   - description: API demo Users
-    url: http://192.168.100.20:3000/api/
+    url: http://192.168.100.10:3000/api/
 info:
   description: APIs document Demo User Login
   version: "1.0.0"
@@ -90,6 +90,8 @@ paths:
         description: Created user object
         required: true
     patch:
+      security:
+        - bearerAuth: []
       tags:
         - user
       summary: Update Profile user
@@ -114,21 +116,36 @@ paths:
           required: true
           schema:
             type: string
-        - name: email
+        - name: number
           in: query
-          description: The email of user
+          description: number of user
           required: true
           schema:
             type: string
+      responses:
+        'success : 0' : 
+          description: Failed to update user
+        'success : 1':
+          description: updated successfully
+  /users/resetpassword:
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - user
+      summary: Reset password
+      description: 
+      operationId: 
+      parameters:
         - name: password
           in: query
           description: The password of user
           required: true
           schema:
             type: string
-        - name: number
+        - name: newpassword
           in: query
-          description: number of user
+          description: new password 
           required: true
           schema:
             type: string
@@ -139,11 +156,12 @@ paths:
           schema:
             type: string
       responses:
+        'success : -1' : 
+          description: Failed to reset password
         'success : 0' : 
-          description: Failed to update user
+          description: Invalid password
         'success : 1':
-          description: updated successfully
-
+          description: reset password successfully
   /users/id:
     get:
       tags:
@@ -163,6 +181,8 @@ paths:
         'success: 0':
           description: Record not Found
     delete:
+      security:
+        - bearerAuth: []
       tags:
         - user
       summary: Delete a user.
