@@ -2,6 +2,7 @@ const { create,
         getUserByUserId,
         getUsers,
         updateUser,
+        resetPassword,
         deleteUser,
         getUserByUserEmail
     } = require("./user.service");
@@ -16,6 +17,8 @@ const config = require('../../auth/config');
 const utils = require('../../auth/utils');
 const { use } = require("./user.router");
 const tokenList = {};
+
+const salt = genSaltSync(10);
 //
 
 module.exports = {
@@ -50,7 +53,7 @@ module.exports = {
                     message: "Email Existence. Please enter another email."
                 });
             }else{
-                const salt = genSaltSync(10);
+                
                 body.password = hashSync(body.password, salt);
                 create(body, (err, results) => {
                     if(err){
@@ -103,8 +106,6 @@ module.exports = {
     },
     updateUsers: (req,res) => {
         const body = req.body;
-        const salt = genSaltSync(10);
-        body.password = hashSync(body.password, salt);
         updateUser(body,(err, results) => {
             if(err){
                 console.log(err);
@@ -121,6 +122,40 @@ module.exports = {
                 message: "updated successfully"
             });
         });
+    },
+    resetPassword: (req,res) => {
+        const body = req.body;
+        body.newpassword = hashSync(body.newpassword, salt);
+        //console.log(body.password)
+        const user = getUserByUserId(body.id,(err, results) => {
+            if(results){
+                //console.log(crrpass)
+                const result = compareSync(body.password, results.password);
+                if(!result){
+                    return res.json({
+                        success: 0,
+                        message: "Invalid Password"
+                    })
+                }else{ //password hop le
+                    resetPassword(body,(err, results) => {
+                        if(err){
+                            console.log(err);
+                            return;
+                        }
+                        if(!results){
+                            return res.json({
+                                success: -1,
+                                message: "Failed to reset password"
+                            });
+                        }
+                        return res.json({
+                            success: 1,
+                            message: "Reset Password successfully"
+                        });
+                    })
+                }
+            }
+        })
     },
     deleteUser: (req,res) => {
         const id = req.params.id;
@@ -239,24 +274,24 @@ module.exports = {
         // Kiểm tra Refresh token có được gửi kèm và mã này có tồn tại trên hệ thống hay không
         if ((refreshToken) && (refreshToken in tokenList)) {
             try {
-            // Kiểm tra mã Refresh token
-            await utils.verifyJwtToken(refreshToken, config.refreshTokenSecret);
-            // Lấy lại thông tin user
-            const user = tokenList[refreshToken];
-            //console.log(user);
-            // Tạo mới mã token và trả lại cho user
-            const retoken = jwt.sign(user, config.secret, {
-                expiresIn: config.tokenLife,
-            });
-            const response = {
-                retoken,
-            }
-            res.status(200).json(response);
+                // Kiểm tra mã Refresh token
+                await utils.verifyJwtToken(refreshToken, config.refreshTokenSecret);
+                // Lấy lại thông tin user
+                const user = tokenList[refreshToken];
+                //console.log(user);
+                // Tạo mới mã token và trả lại cho user
+                const retoken = jwt.sign(user, config.secret, {
+                    expiresIn: config.tokenLife,
+                });
+                const response = {
+                    retoken,
+                }
+                res.status(200).json(response);
             } catch (err) {
-            console.error(err);
-            res.status(403).json({
-                message: 'Invalid refresh token',
-            });
+                console.error(err);
+                res.status(403).json({
+                    message: 'Invalid refresh token',
+                });
             }
         } else {
             res.status(400).json({
